@@ -1,5 +1,5 @@
 const express = require('express');
-const { listContacts, getContactById, removeContact, addContact, updateContact } = require('../../models/contacts.js');
+const { listContacts, getContactById, removeContact, addContact, updateContact } = require('../../models/contacts');
 
 const router = express.Router();
 const Joi = require('joi');
@@ -59,12 +59,16 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => {
   try {
+    const { name, email, phone } = req.body;
     const { contactId } = req.params;
     const { error } = updateSchema.validate(req.body);
 
     if (error) {
       res.status(400).json({ message: error.details[0].message });
       return;
+    }
+    if (!name && !email && !phone) {
+      return res.status(400).json({ message: 'Missing fields' });
     }
     const updatedContact = await updateContact(contactId, req.body);
     if (!updatedContact) {
