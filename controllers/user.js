@@ -40,8 +40,8 @@ const singUp = async (req, res, next) => {
 
 const login = async (req, res, next) => {
     try { 
-        let { email, password, subscription } = await req.body;
-        subscription = 'starter';
+        const { email, password} = await req.body;
+        // let subscription = 'starter';
 
         const { error } = userSignInSchema.validate(req.body);
         if (error) {
@@ -63,12 +63,12 @@ const login = async (req, res, next) => {
 
         const payload = {
             id: user.id,
-            username: user.email,
+            email: user.email,
         };
 
         const token = jwt.sign(payload, secret, { expiresIn: '1h' });
-        await service.updateUser({ _id: user.id, body: { token } });
-        res.status(200).json({ token, user: {email, subscription,}, });
+        await service.updateUser( user.id, { token } );
+        res.status(200).json({ token, user: {email, subscription: user.subscription} });
 
     } catch (error) { 
         console.error(error.message);
