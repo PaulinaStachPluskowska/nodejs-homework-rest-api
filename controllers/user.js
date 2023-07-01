@@ -9,7 +9,7 @@ const secret = process.env.SECRET;
 const singUp = async (req, res, next) => { 
     try {
         const allUsers = await service.getAllUsers();
-        const { email, password } = await req.body;
+        const { email, password, subscription } = await req.body;
 
         if (allUsers.includes(email)) {
             return res.status(409).json({ message: 'Email is in use!' });
