@@ -9,17 +9,13 @@ const secret = process.env.SECRET;
 const singUp = async (req, res, next) => { 
     try {
         const allUsers = await service.getAllUsers();
-        let { email, password, subscription } = await req.body;
+        const { email, password } = await req.body;
 
         if (allUsers.includes(email)) {
             return res.status(409).json({ message: 'Email is in use!' });
         }
 
-        if (!subscription) { 
-            subscription = 'starter';
-        }
-
-        const { error } = userSignUpSchema.validate(req.body);
+        const { error } = userSignUpSchema.validate({ email: email, password: password, });
         if (error) {
             res.status(400).json({ message: error.details[0].message });
             return;
@@ -41,22 +37,16 @@ const singUp = async (req, res, next) => {
 const login = async (req, res, next) => {
     try { 
         const { email, password} = await req.body;
-        // let subscription = 'starter';
 
-        const { error } = userSignInSchema.validate(req.body);
+        const { error } = userSignInSchema.validate({ email: email, password: password, });
         if (error) {
             res.status(400).json({ message: error.details[0].message });
             return;
         }
 
-        const user = await service.getUserByEmail({ email });
-        if (!user) { 
-            res.status(401).json({ message: 'Email or password is wrong' });
-            return;
-        }
-
-        const passwordCompared = await bcrypt.compare(password, user.password);
-        if (!passwordCompared) { 
+        const user = await service.getUserByEmail(email);
+        const passwordCompared = bcrypt.compare(password, user.password);
+        if (!user || ! passwordCompared) { 
             res.status(401).json({ message: 'Email or password is wrong' });
             return;
         }
@@ -67,25 +57,24 @@ const login = async (req, res, next) => {
         };
 
         const token = jwt.sign(payload, secret, { expiresIn: '1h' });
-        await service.updateUser( user.id, { token } );
-        res.status(200).json({ token, user: {email, subscription: user.subscription} });
+        await service.updateUser( user.id, token );
+        res.status(200).json({ token, user: {email: user.email, subscription: user.subscription} });
 
     } catch (error) { 
-        console.error(error.message);
         next(error);  
     }
 };
 
 const logout = async (req, res, next) => {
     try { 
-        const { _id } = await req.user;
-        const user = await service.getUserById({ _id });
+        const id = await req.user;
+        const user = await service.getUserById(id);
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;
         }
 
-        await service.updateUser({ _id: user.id, body: { token: null }, });
+        await service.updateUser({ _id: user.id, body: { token: null } });
         res.status(204).json();
     } catch (error) { 
         console.error(error.message);
@@ -97,7 +86,7 @@ const logout = async (req, res, next) => {
 const current = async(req, res, next) => {
     try { 
         const { email } = req.user;
-        const user = await service.getUserByEmail({ email });
+        const user = await service.getUserByEmail(email);
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;
@@ -111,15 +100,15 @@ const current = async(req, res, next) => {
 
 const updateSubscription = async (req, res, next) => { 
     try { 
-        const { _id } = await req.user;
+        const { id } = await req.user;
         const { subscription } = await req.body;
 
-        const { error } = userUpdateSchema.validate({ subscription });
+        const { error } = userUpdateSchema.validate({ subscription: subscription, });
         if (error) {
             res.status(400).json({ message: error.details[0].message });
             return;
         }
-        const user = await service.updateUser({ _id, body: { subscription } });
+        const user = await service.updateUser({ id: id, body: { subscription } });
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;
