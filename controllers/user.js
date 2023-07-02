@@ -1,10 +1,21 @@
 const service = require('../service/user');
 const { userSignInSchema, userSignUpSchema, userUpdateSchema } = require('../service/schemas/userJoi');
 const bcrypt = require('bcrypt');
+const User = require('../service/schemas/userMongoose');
 
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const secret = process.env.SECRET;
+
+const getAll = async (req, res, next) => {
+  try {
+    const results = await User.find();
+    res.status(200).json(results);
+  } catch (error) {
+    console.error(error.message);
+    next(error);
+  }
+};
 
 const singUp = async (req, res, next) => { 
     try {
@@ -44,7 +55,7 @@ const login = async (req, res, next) => {
             return;
         }
 
-        const user = await service.getUserByEmail(email);
+        const user = await service.getUserByEmail({ email });
         const passwordCompared = bcrypt.compare(password, user.password);
         if (!user || ! passwordCompared) { 
             res.status(401).json({ message: 'Email or password is wrong' });
@@ -57,7 +68,7 @@ const login = async (req, res, next) => {
         };
 
         const token = jwt.sign(payload, secret, { expiresIn: '1h' });
-        await service.updateUser( user.id, token );
+        await service.updateUser(user.id, { token } );
         res.status(200).json({ token, user: {email: user.email, subscription: user.subscription} });
 
     } catch (error) { 
@@ -67,14 +78,13 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     try { 
-        const id = await req.user;
-        const user = await service.getUserById(id);
+        const user = await service.getUserById({ _id: req.user._id});
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;
         }
 
-        await service.updateUser({ _id: user.id, body: { token: null } });
+        await service.updateUser( user.id, { token: null } );
         res.status(204).json();
     } catch (error) { 
         console.error(error.message);
@@ -85,13 +95,12 @@ const logout = async (req, res, next) => {
 
 const current = async(req, res, next) => {
     try { 
-        const { email } = req.user;
-        const user = await service.getUserByEmail(email);
+        const user = await service.getUser({ token: req.user.token });
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;
         }
-        res.json({ email: user.email, subscription: user.subscription, });
+        res.status(200).json({ email: user.email, subscription: user.subscription });
     } catch (error) { 
         console.error(error.message);
         next(error);  
@@ -100,7 +109,6 @@ const current = async(req, res, next) => {
 
 const updateSubscription = async (req, res, next) => { 
     try { 
-        const { id } = await req.user;
         const { subscription } = await req.body;
 
         const { error } = userUpdateSchema.validate({ subscription: subscription, });
@@ -108,14 +116,13 @@ const updateSubscription = async (req, res, next) => {
             res.status(400).json({ message: error.details[0].message });
             return;
         }
-        const user = await service.updateUser({ id: id, body: { subscription } });
+        const user = await service.getUser({ token: req.user.token });
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;
         }
-        res.json({
-            user: { email: user.email, subscription: user.subscription, }
-        });
+        const newUser = await service.updateUser(user.id, { subscription });
+        res.status(200).json({ email: newUser.email, subscription: newUser.subscription });
 
     } catch (error) { 
         console.error(error.message);
@@ -123,4 +130,4 @@ const updateSubscription = async (req, res, next) => {
     }
 };
 
-module.exports = { singUp, login, logout, current, updateSubscription, };
+module.exports = { getAll, singUp, login, logout, current, updateSubscription, };

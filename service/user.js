@@ -4,20 +4,24 @@ const addUser = (body) => {
     return User.create(body);
 };
 
+const getUser = (body) => { 
+    return User.findOne(body);
+};
+
 const getAllUsers = () => { 
     return User.find({}).distinct('email');
 };
 
 const getUserByEmail = (email) => {
-    return User.findOne({ email });
+    return User.findOne( email );
 };
 
 const getUserById = (id) => {
-    return User.findById({ _id: id });
+    return User.findById( id );
 };
 
 const updateUser = (id, body) => {
-    return User.findByIdAndUpdate({ _id: id }, body, { new: true });
+    return User.findByIdAndUpdate( id, body, { new: true });
 };
 
 module.exports = { addUser, getAllUsers, getUserByEmail, getUserById, updateUser, };
