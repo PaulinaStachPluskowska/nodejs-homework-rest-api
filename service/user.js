@@ -24,4 +24,4 @@ const updateUser = (id, body) => {
     return User.findByIdAndUpdate( id, body, { new: true });
 };
 
-module.exports = { addUser, getAllUsers, getUserByEmail, getUserById, updateUser, };
+module.exports = { addUser, getUser, getAllUsers, getUserByEmail, getUserById, updateUser, };
