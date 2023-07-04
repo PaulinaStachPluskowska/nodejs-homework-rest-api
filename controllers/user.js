@@ -95,7 +95,7 @@ const logout = async (req, res, next) => {
 
 const current = async(req, res, next) => {
     try { 
-        const user = await service.getUser({ token: req.user.token });
+        const user = await service.getUserById({ _id: req.user._id});
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;

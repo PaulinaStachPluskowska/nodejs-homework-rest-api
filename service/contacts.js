@@ -4,7 +4,7 @@ const listContacts = async (pageNr = 1, limitPerPage = 20, favorite) => {
   let filter = {};
   const startIndex = (pageNr - 1) * limitPerPage;
   if (favorite !== undefined) { 
-    filter = {favorite};
+    filter = { favorite };
   }
   return Contact.find(filter)
     .skip(startIndex)
