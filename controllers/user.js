@@ -68,7 +68,9 @@ const login = async (req, res, next) => {
         };
 
         const token = jwt.sign(payload, secret, { expiresIn: '1h' });
-        await service.updateUser(user.id, { token } );
+        user.token = token;
+        await user.save();
+        // await service.updateUser(user.id, { token } );
         res.status(200).json({ token, user: {email: user.email, subscription: user.subscription} });
 
     } catch (error) { 
@@ -95,7 +97,7 @@ const logout = async (req, res, next) => {
 
 const current = async(req, res, next) => {
     try { 
-        const user = await service.getUserById({ _id: req.user._id});
+        const user = req.user;
         if (!user) { 
             res.status(401).json({ message: 'Not authorized' });
             return;
