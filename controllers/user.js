@@ -95,20 +95,10 @@ const logout = async (req, res, next) => {
 
 const current = async(req, res, next) => {
 const user = req.user;
-  if (user) {
-    return res.status(200).json({
-      status: "success",
-      code: 200,
-      message: "current user",
-      data: { email: user.email, subscription: user.subscription },
-    });
-  } else {
-    return res.status(401).json({
-      status: "error",
-      code: 401,
-      message: "Not authorized",
-      data: "Not authorized",
-    });
+if (user) {
+    return res.status(200).json({ message: "Current user", email: user.email, subscription: user.subscription });
+} else {
+    return res.status(401).json({ message: 'Not authorized' });
   }
 };
     
