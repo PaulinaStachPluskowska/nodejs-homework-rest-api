@@ -94,19 +94,24 @@ const logout = async (req, res, next) => {
 };
 
 const current = async(req, res, next) => {
-    try { 
-        const user = req.user;
-        if (!user) { 
-            res.status(401).json({ message: 'Not authorized' });
-            return;
-        }
-        res.status(200).json({ email: user.email, subscription: user.subscription });
-    } catch (error) { 
-        console.error(error.message);
-        next(error);  
-    }
+const user = req.user;
+  if (user) {
+    return res.status(200).json({
+      status: "success",
+      code: 200,
+      message: "current user",
+      data: { email: user.email, subscription: user.subscription },
+    });
+  } else {
+    return res.status(401).json({
+      status: "error",
+      code: 401,
+      message: "Not authorized",
+      data: "Not authorized",
+    });
+  }
 };
-
+    
 const updateSubscription = async (req, res, next) => { 
     try { 
         const { subscription } = await req.body;

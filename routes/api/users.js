@@ -12,7 +12,7 @@ router.get('/', userController.getAll);
 
 router.get('/logout', auth, userController.logout);
 
-router.get('/current', auth, userController.current);
+router.get("/current", auth, userController.current);
 
 router.patch('/', auth, userController.updateSubscription);
 
