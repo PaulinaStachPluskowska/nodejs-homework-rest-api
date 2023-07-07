@@ -2,8 +2,9 @@ const service = require('../service/contacts');
 const { schema, updateSchema } = require('../service/schemas/contactJoi');
 
 const listContacts = async (req, res, next) => {
+    const { page, limit, favorite } = req.query;
     try {
-        const contacts = await service.listContacts();
+        const contacts = await service.listContacts(page, limit, favorite);
         res.status(200).json(contacts);
     } catch (error) { 
         console.error(error.message);

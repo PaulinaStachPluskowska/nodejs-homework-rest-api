@@ -1,7 +1,14 @@
 const Contact = require('./schemas/contactsMongoose');
 
-const listContacts = async () => {
-  return Contact.find();
+const listContacts = async (pageNr = 1, limitPerPage = 20, favorite) => {
+  let filter = {};
+  const startIndex = (pageNr - 1) * limitPerPage;
+  if (favorite !== undefined) { 
+    filter = { favorite };
+  }
+  return Contact.find(filter)
+    .skip(startIndex)
+    .limit(limitPerPage);
 };
 
 const getContactById = async (contactId) => {
