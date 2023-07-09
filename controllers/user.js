@@ -103,7 +103,7 @@ const logout = async (req, res, next) => {
 const current = async(req, res, next) => {
 const user = req.user;
 if (user) {
-    return res.status(200).json({ message: "Current user", email: user.email, subscription: user.subscription });
+    return res.status(200).json({ message: "Current user", email: user.email, subscription: user.subscription, avatar: user.avatarURL,  });
 } else {
     return res.status(401).json({ message: 'Not authorized' });
   }
