@@ -3,6 +3,12 @@ const { userSignInSchema, userSignUpSchema, userUpdateSchema } = require('../ser
 const bcrypt = require('bcrypt');
 const User = require('../service/schemas/userMongoose');
 
+const { avatarDir } = require('../middlewares/avatar');
+const { avatarEdition } = require('../middlewares/avatarEdition');
+const path = require('path');
+const fs = require('fs').promises;
+const gravatar = require('gravatar');
+
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const secret = process.env.SECRET;
@@ -32,7 +38,8 @@ const singUp = async (req, res, next) => {
             return;
         }
         const passwordEncrypted = await bcrypt.hash(password, 10);
-        const newUser = await service.addUser({ email, password: passwordEncrypted, subscription, });
+        const avatarURL = gravatar.url(email, { s: '200', r: 'g', d: 'identicon' })
+        const newUser = await service.addUser({ email, password: passwordEncrypted, subscription, avatarURL, });
         
         if (!newUser) {
             res.status(409).json({ message: `Can't create user!` });
@@ -125,4 +132,30 @@ const updateSubscription = async (req, res, next) => {
     }
 };
 
-module.exports = { getAll, singUp, login, logout, current, updateSubscription, };
+const updateAvatar = async (req, res, next) => { 
+    const { path: tempPath, filename } = req.file;
+    if (!req.file) {
+        res.status(400).json({ message: 'File not provided'});
+        return;
+    }
+
+    try { 
+        const user = await service.getUser({ token: req.user.token });
+        if (!user) { 
+            res.status(401).json({ message: 'Not authorized' });
+            return;
+        }
+
+        const avatarURL = path.join(avatarDir, filename);
+        avatarEdition(tempPath, avatarURL);
+        await fs.unlink(tempPath);
+
+        const newUser  = await service.updateUser(user.id, { avatarURL});
+        res.status(200).json({ avatarURL: newUser.avatarURL  });
+    } catch (error) { 
+        await fs.unlink(tempPath);
+        next(error);  
+    }
+};
+
+module.exports = { getAll, singUp, login, logout, current, updateSubscription, updateAvatar, };

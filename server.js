@@ -1,5 +1,7 @@
 const app = require('./app');
 const mongoose = require('mongoose');
+const { createFolderIsNotExist } = require('./middlewares/createFolders');
+const { tmpDir, avatarDir } = require('./middlewares/avatar');
 
 require('dotenv').config();
 
@@ -11,10 +13,11 @@ const connection = mongoose.connect(MONGO_URI, {
   useUnifiedTopology: true,
 });
 
-
 connection
   .then(() => { 
-    app.listen(PORT, () => {
+    app.listen(PORT, async () => {
+      await createFolderIsNotExist(tmpDir);
+      await createFolderIsNotExist(avatarDir);
       console.log('\nDatabase connection successful.');
       console.log(`Use our API on port: ${PORT}`);
     });
