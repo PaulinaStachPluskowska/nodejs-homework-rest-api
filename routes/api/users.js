@@ -1,6 +1,7 @@
 const express = require('express');
 const userController = require('../../controllers/user');
 const auth = require('../../middlewares/auth');
+const { upload } = require('../../middlewares/avatar');
 
 const router = express.Router();
 
@@ -15,5 +16,7 @@ router.get('/logout', auth, userController.logout);
 router.get("/current", auth, userController.current);
 
 router.patch('/', auth, userController.updateSubscription);
+
+router.patch('/avatars', auth, upload.single('avatar'), userController.updateAvatar);
 
 module.exports = router;
