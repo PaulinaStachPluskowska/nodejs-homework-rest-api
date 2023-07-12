@@ -9,6 +9,10 @@ router.post('/signup', userController.singUp);
 
 router.post('/login', userController.login);
 
+router.post('/verify', userController.resendVerificationEmail);
+
+router.get('/verify/:verificationToken', userController.verifyEmail);
+
 router.get('/', userController.getAll);
 
 router.get('/logout', auth, userController.logout);
